@@ -1,13 +1,86 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: 	#E6E6FA;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+h1, h3 {
+  font-family: 'Supermercado One', cursive;
+  color: #4B0082;
+}
+
+h1 {
+  font-size: 3em;
+  margin-bottom: 0;
+  margin-top: 10px;
+}
+
+h3 {
+  font-size: 1.5em;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+
+
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.list-item {
+  margin-bottom: 10px;
+  background-color: #4B0082;
+  color: white;
+  width: 300px;
+  min-height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 30px;
+  border-radius: 30px;
+}
+
+.list-item-checkbox {
+  display: flex;
+  align-items: center;
+  width: 50px;
+  margin-left: 5px;
+}
+
+.list-item-text {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.checkbox {
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  padding: 0;
+}
+
+.new-item {
+  margin-bottom: 10px;
+  background-color: #4B0082;
+  color: white;
+  width: 300px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 30px;
+}
+
+.new-item input {
+  background-color: transparent;
+  font-family: 'Nunito', sans-serif;
+  font-size: 30px;
+  color: white;
+  width: 75%;
+  border:0;
+  text-align: center;
 }
