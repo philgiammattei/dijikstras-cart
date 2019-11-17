@@ -133,3 +133,16 @@ h3 {
   border:0;
   text-align: center;
 }
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-arrow {
+  border: none;
+  background-color: inherit;
+  font-size: 25px;
+  margin: 0 10px;
+}

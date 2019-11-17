@@ -155,10 +155,20 @@ class Section extends React.Component {
     super(props);
 
     this.handleClick = this.handleClick.bind(this);
+    this.handleUpClick = this.handleUpClick.bind(this);
+    this.handleDownClick = this.handleDownClick.bind(this);
+
+  }
+
+  handleUpClick() {
+    this.props.onClick(this.props.sectionId, "button-up");
+  }
+
+  handleDownClick() {
+    this.props.onClick(this.props.sectionId, "button-down");
   }
 
   handleClick(itemId, sectionString) {
-    console.log("itemId: " + itemId + " sectionString: " + sectionString);
     this.props.onClick(itemId, sectionString);
   }
 
@@ -166,7 +176,14 @@ class Section extends React.Component {
     const matches = this.props.list.filter(item => item.section === this.props.name);
     return (
       <div className="section" style={{display: (matches.length > 0 ? 'block' : 'none')}}>
-        <h3 style={{color: this.props.color}}>{this.props.name}</h3>
+        <div className="section-header">
+          <h3 style={{color: this.props.color}}>{this.props.name}</h3>
+          <div className="section-buttons">
+            <button onClick={this.handleUpClick} className="section-arrow" style={{color: this.props.color}}>&#9650;</button>
+            <button onClick={this.handleDownClick} className="section-arrow" style={{color: this.props.color}}>&#9660;</button>
+          </div>
+
+        </div>
         {matches.map(item => <Item text={item.text} onClick={this.handleClick} key={item.itemId}
           color={this.props.color} itemId={item.itemId} section={this.props.name} />)}
       </div>
@@ -197,6 +214,8 @@ class List extends React.Component {
   }
 
   componentDidMount() {
+    //call 2 airtable tables, write JSON to local state.
+    //each method call is nested because otherwise state change does not persist(?)
     const that = this;
     fetch('https://api.airtable.com/v0/appjMVyQxNAsRgoTO/section?api_key=keyWJQGOCzHBgXF70')
     .then((resp) => resp.json())
@@ -224,12 +243,13 @@ class List extends React.Component {
     console.log(this.state.sectionJSON);
     //build section objects
     for (let i = 0; i < sectionJSON.length; i++) {
+      const sec = sectionJSON.filter(a => a.fields.order === i)[0];
       newSections.push({
-        sectionId: i,
-        name: sectionJSON[i].fields.name,
+        sectionId: sec.fields.sectionId,
+        name: sec.fields.name,
         matches: [],
-        color: sectionJSON[i].fields.color,
-        order: sectionJSON[i].order,
+        color: sec.fields.color,
+        order: sec.fields.order,
       });
 
       //add matching items to section objects
@@ -239,24 +259,63 @@ class List extends React.Component {
         }
       }
     }
+    newSections.sort((a,b) => a.order < b.order);
+    console.log(newSections);
     //add section objects to state
     this.setState({sections: newSections});
     console.log(this.state);
   }
 
-  handleClick(itemId, sectionString) {
+  handleClick(id, sectionString) {
+    //handle string arg - "dismiss" removes item from list
     if (sectionString === "dismiss") {
-      const newList = this.state.list.filter(item => item.itemId !== itemId);
+      const newList = this.state.list.filter(item => item.itemId !== id);
       this.setState({list: newList});
+    } else if (sectionString === "button-up") {
+      //section reordering - check for limits and switch places with immediate visible neighbor
+      let newSections = this.state.sections;
+      let visibleSections = this.getVisibleSections(newSections);
+      let visibleIndex  = visibleSections.map(i => i.sectionId).indexOf(id);
+      if (visibleIndex > 0) {
+        let neighborId = visibleSections[visibleIndex - 1].sectionId;
+        let thisOrder = newSections.filter(i => i.sectionId === id)[0].order;
+        let neighborOrder = newSections.filter(i => i.sectionId === neighborId)[0].order;
+        let thisIndex = newSections.map(i => i.sectionId).indexOf(id);
+        let neighborIndex = newSections.map(i => i.sectionId).indexOf(neighborId);
+        //switch orders of visible neighbors, rerender
+        newSections[thisIndex].order = neighborOrder;
+        newSections[neighborIndex].order = thisOrder;
+        newSections.sort((a,b) => (a.order < b.order) ? -1 : 1);
+        this.setState({sections: newSections});
+      }
+    } else if (sectionString === "button-down") {
+      //section reordering - check for limits and switch places with immediate visible neighbor
+      let newSections = this.state.sections;
+      let visibleSections = this.getVisibleSections(newSections);
+      let visibleIndex  = visibleSections.map(i => i.sectionId).indexOf(id);
+      if (visibleIndex < visibleSections.length - 1) {
+        let neighborId = visibleSections[visibleIndex + 1].sectionId;
+        let thisOrder = newSections.filter(i => i.sectionId === id)[0].order;
+        let neighborOrder = newSections.filter(i => i.sectionId === neighborId)[0].order;
+        let thisIndex = newSections.map(i => i.sectionId).indexOf(id);
+        let neighborIndex = newSections.map(i => i.sectionId).indexOf(neighborId);
+        //switch orders of visible neighbors, rerender
+        newSections[thisIndex].order = neighborOrder;
+        newSections[neighborIndex].order = thisOrder;
+        newSections.sort((a,b) => (a.order < b.order) ? -1 : 1);
+        this.setState({sections: newSections});
+      }
     } else {
-      let item = this.state.list.filter(i => i.itemId === itemId)[0];
+    //otherwise string arg is to set section for item
+    //to render properly, remove item from list, add identical element with correct section
+      let item = this.state.list.filter(i => i.itemId === id)[0];
       let sections = this.state.sections;
       sections.filter(s => s.name === sectionString)[0].matches.push(item.text);
       this.setState({sections: sections});
 
       let list = this.state.list;
 
-      list = list.filter(i => i.itemId !== itemId);
+      list = list.filter(i => i.text !== item.text);
       list.push({
         text: item.text,
         itemId: item.itemId,
@@ -264,7 +323,26 @@ class List extends React.Component {
       });
 
       this.setState({list: list});
+      //update airtable with new section mapping
+      var Airtable = require('airtable');
+      var base = new Airtable({apiKey: 'keyWJQGOCzHBgXF70'}).base('appjMVyQxNAsRgoTO');
 
+      base('item').create([
+      {
+        "fields": {
+        "name": item.text,
+        "section": sectionString,
+      }
+    }
+  ], function(err, records) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    records.forEach(function (record) {
+      console.log(record.getId());
+  });
+});
     }
   }
 
@@ -278,6 +356,17 @@ class List extends React.Component {
         });
       this.setState({list: newList});
       this.setState({newId: this.state.newId + 1});
+  }
+
+  getVisibleSections(sections) {
+    let visible = [];
+    let items = this.state.list;
+
+    for (let item of items) {
+      visible.push(sections.filter(i => i.name === item.section)[0]);
+    }
+    visible.sort((a,b) => (a.order < b.order) ? -1 : 1);
+    return visible;
   }
 
   findSection(itemName) {
@@ -297,9 +386,9 @@ class List extends React.Component {
 
     return (
       <div className="list">
-        {sections.sort((a,b) => a.order > b.order).map(section =>
+        {sections.sort((a,b) => (a.order < b.order) ? -1 : 1).map(section =>
         <Section name={section.name} key={section.sectionId} list={this.state.list}
-          color={section.color} onClick={this.handleClick}/>
+          color={section.color} onClick={this.handleClick} sectionId={section.sectionId}/>
       )}
         <NewItem handleEnter={this.handleEnter} />
       </div>
