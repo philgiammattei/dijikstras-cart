@@ -32,7 +32,7 @@ h3 {
   margin-bottom: 10px;
   background-color: #4B0082;
   color: white;
-  width: 300px;
+  width: 400px;
   min-height: 60px;
   display: flex;
   justify-content: space-between;
@@ -63,11 +63,60 @@ h3 {
   padding: 0;
 }
 
+.menu {
+  position: absolute;
+  width: 300px;
+  background-color: black;
+  border-radius: 25px 25px 25px 25px;
+}
+
+.menu-header {
+  color: white;
+  font-size: 30px;
+}
+
+.menu-button {
+  color: white;
+  background-color: black;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  font-size: 30px;
+  padding: 0;
+  font-family: 'Nunito', sans-serif;
+  margin-right: 5px;
+  border: 3px white solid;
+}
+
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.category-button {
+  display: block;
+  background-color: black;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  border: 3px white solid;
+  border-radius: 25px;
+  margin: 10px;
+  padding: 5px 10px;
+  font-size: 30px;
+  text-align: right;
+}
+
+.cancel-button {
+  color: yellow;
+  border: 3px yellow solid;
+}
+
 .new-item {
   margin-bottom: 10px;
   background-color: #4B0082;
   color: white;
-  width: 300px;
+  width: 400px;
   height: 60px;
   display: flex;
   justify-content: center;

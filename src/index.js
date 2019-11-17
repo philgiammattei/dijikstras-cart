@@ -8,6 +8,78 @@ import './index.css';
 
 //begin Dijkstra
 
+//dropdown menu
+class Menu extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showMenu: false,
+    }
+
+    this.showMenu = this.showMenu.bind(this);
+    this.cancel = this.cancel.bind(this);
+    this.setSection = this.setSection.bind(this);
+  }
+
+  showMenu(event) {
+    event.preventDefault();
+
+    this.setState({
+      showMenu: true,
+    });
+  }
+
+  cancel(event) {
+    event.preventDefault();
+
+    this.setState({
+      showMenu: false,
+    });
+  }
+
+  setSection(section) {
+    console.log("section: " + section);
+    this.setState({
+      showMenu: false,
+    })
+    console.log("fire setSection(section) in Menu");
+    this.props.onClick(section);
+  }
+
+  render() {
+
+    return (
+    <div className="menu-container">
+    <button className="menu-button" onClick={this.showMenu}>
+      !
+    </button>
+    {
+      this.state.showMenu
+      ? (
+        <div className="menu">
+          <h3 className="menu-header">Choose a section:</h3>
+          <button className="category-button" onClick={() => this.setSection("produce")}>Produce</button>
+          <button className="category-button" onClick={() => this.setSection("condiments")}>Condiments</button>
+          <button className="category-button" onClick={() => this.setSection("dry goods")}>Dry Goods</button>
+          <button className="category-button" onClick={() => this.setSection("ethnic")}>Ethnic</button>
+          <button className="category-button" onClick={() => this.setSection("beverages")}>Beverages</button>
+          <button className="category-button" onClick={() => this.setSection("meat")}>Meat</button>
+          <button className="category-button" onClick={() => this.setSection("dairy")}>Dairy</button>
+          <button className="category-button" onClick={() => this.setSection("frozen")}>Frozen</button>
+          <button className="category-button cancel-button" onClick={this.cancel}>Cancel</button>
+        </div>
+      )
+      : (
+        null
+      )
+    }
+
+    </div>
+  )
+  }
+}
+
 class NewItem extends React.Component {
   constructor(props) {
     super(props);
@@ -41,21 +113,31 @@ class Item extends React.Component {
       itemId: props.itemId,
     };
     this.onClick = this.onClick.bind(this);
+    this.setSection = this.setSection.bind(this);
   }
 
   onClick() {
-    this.props.onClick(this.state.itemId);
+    this.props.onClick(this.state.itemId, "dismiss");
+  }
+
+  setSection(section) {
+    console.log("fire setSection(itemId, section) in Item");
+    console.log("section: " + section);
+    this.props.onClick(this.state.itemId, section);
   }
 
   render() {
     return (
-      <div className="list-item">
+      <div style={{background:this.props.color}} className="list-item" >
         <div className="list-item-checkbox">
           <Checkbox onClick={() => this.onClick()} />
         </div>
         <div className="list-item-text">
           {this.state.text}
         </div>
+        {this.props.section === "uncategorized" &&
+          <Menu onClick={this.setSection}/>
+        }
 
       </div>
     )
@@ -75,18 +157,18 @@ class Section extends React.Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  handleClick(itemId) {
-    this.props.onClick(itemId);
+  handleClick(itemId, sectionString) {
+    console.log("itemId: " + itemId + " sectionString: " + sectionString);
+    this.props.onClick(itemId, sectionString);
   }
 
   render() {
     const matches = this.props.list.filter(item => item.section === this.props.name);
-
     return (
       <div className="section" style={{display: (matches.length > 0 ? 'block' : 'none')}}>
-        <h3>{this.props.name}</h3>
+        <h3 style={{color: this.props.color}}>{this.props.name}</h3>
         {matches.map(item => <Item text={item.text} onClick={this.handleClick} key={item.itemId}
-          itemId={item.itemId} />)}
+          color={this.props.color} itemId={item.itemId} section={this.props.name} />)}
       </div>
 
     );
@@ -101,7 +183,8 @@ class List extends React.Component {
       list: [
         {
           itemId: 0,
-          name: "Tap the circle to cross me off the list!",
+          text: "Tap the circle to cross me off the list!",
+          section: "tutorial"
         }
       ],
       sections: [],
@@ -114,55 +197,80 @@ class List extends React.Component {
   }
 
   componentDidMount() {
+    const that = this;
     fetch('https://api.airtable.com/v0/appjMVyQxNAsRgoTO/section?api_key=keyWJQGOCzHBgXF70')
     .then((resp) => resp.json())
     .then(data => {
-      this.setState({sectionJSON: data.records});
-    }).catch(err => {
-    });
+      that.setState({sectionJSON: data.records});
+      fetch('https://api.airtable.com/v0/appjMVyQxNAsRgoTO/item?api_key=keyWJQGOCzHBgXF70')
+      .then((resp) => resp.json())
+      .then(data => {
+        that.setState({matchJSON: data.records});
+        that.buildState();
+      }).catch(err => {
 
-    fetch('https://api.airtable.com/v0/appjMVyQxNAsRgoTO/item?api_key=keyWJQGOCzHBgXF70')
-    .then((resp) => resp.json())
-    .then(data => {
-      this.setState({matchJSON: data.records});
-    }).catch(err => {
+      });
+    }
+
+    ).catch(err => {
     });
-    this.buildState();
 
   }
 
   buildState() {
-    let sections = [];
+    let newSections = [];
     let sectionJSON = this.state.sectionJSON;
     let matchesJSON = this.state.matchJSON;
+    console.log(this.state.sectionJSON);
     //build section objects
     for (let i = 0; i < sectionJSON.length; i++) {
-      sections.push({
+      newSections.push({
         sectionId: i,
         name: sectionJSON[i].fields.name,
         matches: [],
+        color: sectionJSON[i].fields.color,
+        order: sectionJSON[i].order,
       });
 
       //add matching items to section objects
       for (let m of matchesJSON) {
-          if (m.fields.section === sections[i].name) {
-            sections[i].matches.push(m.fields.fname);
+          if (m.fields.section === newSections[i].name) {
+            newSections[i].matches.push(m.fields.name);
         }
       }
     }
     //add section objects to state
-    this.setState({sections: sections});
+    this.setState({sections: newSections});
+    console.log(this.state);
   }
 
-  handleClick(deleteItemId) {
-    const newList = this.state.list.filter(item => item.itemId !== deleteItemId);
-    this.setState({list: newList});
+  handleClick(itemId, sectionString) {
+    if (sectionString === "dismiss") {
+      const newList = this.state.list.filter(item => item.itemId !== itemId);
+      this.setState({list: newList});
+    } else {
+      let item = this.state.list.filter(i => i.itemId === itemId)[0];
+      let sections = this.state.sections;
+      sections.filter(s => s.name === sectionString)[0].matches.push(item.text);
+      this.setState({sections: sections});
+
+      let list = this.state.list;
+
+      list = list.filter(i => i.itemId !== itemId);
+      list.push({
+        text: item.text,
+        itemId: item.itemId,
+        section: sectionString,
+      });
+
+      this.setState({list: list});
+
+    }
   }
 
   handleEnter(inputText) {
       let newList = this.state.list;
       let newSection = this.findSection(inputText);
-      console.log(newSection);
       newList.push({
         text: inputText,
         itemId: this.state.newId,
@@ -186,11 +294,12 @@ class List extends React.Component {
 
   render() {
     const sections = this.state.sections;
+
     return (
       <div className="list">
-        {this.state.sections.map(section =>
+        {sections.sort((a,b) => a.order > b.order).map(section =>
         <Section name={section.name} key={section.sectionId} list={this.state.list}
-          onClick={this.handleClick}/>
+          color={section.color} onClick={this.handleClick}/>
       )}
         <NewItem handleEnter={this.handleEnter} />
       </div>
