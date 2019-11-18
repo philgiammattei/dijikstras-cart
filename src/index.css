@@ -2,6 +2,11 @@ body {
   background-color: 	#E6E6FA;
 }
 
+footer * {
+  font-family: 'Supermercado One', cursive;
+  color: #4B0082;
+}
+
 h1, h3 {
   font-family: 'Supermercado One', cursive;
   color: #4B0082;
@@ -32,7 +37,7 @@ h3 {
   margin-bottom: 10px;
   background-color: #4B0082;
   color: white;
-  width: 400px;
+  width: 350px;
   min-height: 60px;
   display: flex;
   justify-content: space-between;
@@ -62,6 +67,7 @@ h3 {
   height: 50px;
   border-radius: 25px;
   padding: 0;
+  background-color: white;
 }
 
 .menu {
@@ -74,6 +80,7 @@ h3 {
 .menu-header {
   color: white;
   font-size: 30px;
+  margin-left: 10px;
 }
 
 .menu-button {
@@ -117,7 +124,7 @@ h3 {
   margin-bottom: 10px;
   background-color: #4B0082;
   color: white;
-  width: 400px;
+  width: 350px;
   height: 60px;
   display: flex;
   justify-content: center;

@@ -200,14 +200,39 @@ class List extends React.Component {
       list: [
         {
           itemId: 0,
-          text: "Tap the circle to cross me off the list!",
+          text: "Tap the circle to cross items (like this one!) off the list.",
           section: "tutorial"
-        }
+        },
+        {
+          itemId: 1,
+          text: "Tap ! on uncategorized items to set their section. I'll remember your selection.",
+          section: "tutorial"
+        },
+        {
+          itemId: 2,
+          text: "Reorder sections with the arrow buttons.",
+          section: "tutorial"
+        },
+        {
+          itemId: 4,
+          text: "Bacon",
+          section: "meat"
+        },
+        {
+          itemId: 5,
+          text: "Lettuce",
+          section: "produce"
+        },
+        {
+          itemId: 6,
+          text: "Tomato",
+          section: "produce"
+        },
       ],
       sections: [],
       sectionJSON: [],
       matchJSON: [],
-      newId:1,
+      newId:7,
     };
     this.handleEnter = this.handleEnter.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -414,9 +439,10 @@ class App extends React.Component {
     render() {
     return (
     <div className="list">
-      <h1>Dijikstra's Cart</h1>
+      <h1>Dijkstra's Cart</h1>
       <h3>An Automagic Shopping List</h3>
       <List key="1"/>
+      <footer><p>From <a href="https://giammattei.co">Phil Giammattei</a>, 2019</p></footer>
     </div>
     );
   }
