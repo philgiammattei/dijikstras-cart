@@ -295,10 +295,13 @@ class List extends React.Component {
       let visibleIndex  = visibleSections.map(i => i.sectionId).indexOf(id);
       if (visibleIndex < visibleSections.length - 1) {
         let neighborId = visibleSections[visibleIndex + 1].sectionId;
+
         let thisOrder = newSections.filter(i => i.sectionId === id)[0].order;
         let neighborOrder = newSections.filter(i => i.sectionId === neighborId)[0].order;
+
         let thisIndex = newSections.map(i => i.sectionId).indexOf(id);
         let neighborIndex = newSections.map(i => i.sectionId).indexOf(neighborId);
+
         //switch orders of visible neighbors, rerender
         newSections[thisIndex].order = neighborOrder;
         newSections[neighborIndex].order = thisOrder;
