@@ -285,10 +285,10 @@ class List extends React.Component {
       }
     }
     newSections.sort((a,b) => a.order < b.order);
-    console.log(newSections);
+
     //add section objects to state
     this.setState({sections: newSections});
-    console.log(this.state);
+
   }
 
   handleClick(id, sectionString) {
@@ -300,6 +300,7 @@ class List extends React.Component {
       //section reordering - check for limits and switch places with immediate visible neighbor
       let newSections = this.state.sections;
       let visibleSections = this.getVisibleSections(newSections);
+      console.log(visibleSections);
       let visibleIndex  = visibleSections.map(i => i.sectionId).indexOf(id);
       if (visibleIndex > 0) {
         let neighborId = visibleSections[visibleIndex - 1].sectionId;
@@ -317,9 +318,12 @@ class List extends React.Component {
       //section reordering - check for limits and switch places with immediate visible neighbor
       let newSections = this.state.sections;
       let visibleSections = this.getVisibleSections(newSections);
+      console.log(visibleSections);
       let visibleIndex  = visibleSections.map(i => i.sectionId).indexOf(id);
       if (visibleIndex < visibleSections.length - 1) {
         let neighborId = visibleSections[visibleIndex + 1].sectionId;
+        console.log("neighbor id: " + neighborId);
+        console.log("id: " + id);
 
         let thisOrder = newSections.filter(i => i.sectionId === id)[0].order;
         let neighborOrder = newSections.filter(i => i.sectionId === neighborId)[0].order;
@@ -332,6 +336,7 @@ class List extends React.Component {
         newSections[neighborIndex].order = thisOrder;
         newSections.sort((a,b) => (a.order < b.order) ? -1 : 1);
         this.setState({sections: newSections});
+
       }
     } else {
     //otherwise string arg is to set section for item
@@ -389,9 +394,13 @@ class List extends React.Component {
   getVisibleSections(sections) {
     let visible = [];
     let items = this.state.list;
+    let currentSection = "";
 
     for (let item of items) {
-      visible.push(sections.filter(i => i.name === item.section)[0]);
+      if (currentSection !== item.section) {
+        visible.push(sections.filter(i => i.name === item.section)[0]);
+        currentSection = item.section;
+      }
     }
     visible.sort((a,b) => (a.order < b.order) ? -1 : 1);
     return visible;
